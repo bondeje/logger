@@ -2,10 +2,18 @@ CC = gcc
 CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable
 IFLAGS = -Iinclude
 LFLAGS = 
+BIN_DIR = bin
+OBJ_DIR = obj
 
-all: test
+all: build_hierarchy src/logger.o
 
 test: test_base.exe
+
+build_hierarchy: $(OBJ_DIR) $(BIN_DIR)
+
+$(OBJ_DIR): ; @mkdir -p $@
+
+$(BIN_DIR): ; @mkdir -p $@
 
 src/logger.o: src/logger.c
 	$(CC) $(CFLAGS) -c $(IFLAGS) src/logger.c -o obj/logger.o $(LFLAGS)

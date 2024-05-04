@@ -7,6 +7,18 @@
 
 struct Logger base_logger = DEFAULT_LOGGER_INIT;
 
+char const * log_level_names[] = {
+    "LOG_LEVEL_DISABLE",
+    "LOG_LEVEL_FATAL",
+    "LOG_LEVEL_ERROR",
+    "LOG_LEVEL_WARN",
+    "LOG_LEVEL_INFO",
+    "LOG_LEVEL_DEBUG",
+    "LOG_LEVEL_TRACE",
+    "LOG_LEVEL_NOT_SET",
+    NULL
+};
+
 size_t logger_required_args(char const * format, size_t format_size) {
     return 0;
 }
@@ -44,7 +56,7 @@ int Logger_init(struct Logger * logger, char const * filename, char const * form
     logger->log = log;
 
     if (!name) {
-        name = "unnamed";
+        name = logger->name;
     }
     logger->name = name;
 
@@ -53,31 +65,27 @@ int Logger_init(struct Logger * logger, char const * filename, char const * form
     } else if (!strcmp(filename, "stderr")) {
         logger->stream = stderr;
     } else {
-
         FILE * file = fopen(filename, "rb");
-        if (!file) {
-            goto fail_fopen;
-        }
-        long file_size = ftell(file);
-        if (file_size < 0) {
-            goto fail_ftell;
-        }
-        if (fseek(file, 0, SEEK_END)) {
-            goto fail_fseek;
-        }
-        file_size = ftell(file) - file_size;
-
-        logger->stream = freopen(filename, "ab+", file);
-        if (file_size) {
+        long file_size = 0;
+        if (file) { // file exists and is open for reading
+            file_size = ftell(file);
+            if (file_size < 0) {
+                goto fail_ftell;
+            }
+            if (fseek(file, 0, SEEK_END)) {
+                goto fail_fseek;
+            }
+            file_size = ftell(file) - file_size;
+            logger->stream = freopen(filename, "ab+", file);
             fprintf(logger->stream, "\nlogging started for %s at {need to add date time}\n", logger->name);
         } else {
+            logger->stream = fopen(filename, "wb");
             fprintf(logger->stream, "logging started for %s at {need to add date time}\n", logger->name);
-        }        
+        }
     }
     return 0;
 fail_fseek:
 fail_ftell:
-fail_fopen:
     free(logger->buffer);
     logger->buffer = NULL;
 fail_buffer_alloc:
@@ -103,7 +111,7 @@ void Logger_log(struct Logger * logger, char const * file, char const * func, si
     }
     if (logger->stream == NULL) { // initialize logger to system level logger to stdout
         // initialize the logger to stdin with default parameters
-        LOG_INIT(logger, NULL, NULL, 0, MAX_LOGGING_LEVEL, 1, NULL, logger->name);
+        LOG_INIT(logger, NULL, NULL, 0, DEFAULT_LOGGING_LEVEL, 1, NULL, logger->name);
         
         // post to the base_logger that an uninitialized logger was triggered
         if (logger->stream == NULL) {
@@ -130,9 +138,26 @@ void Logger_log(struct Logger * logger, char const * file, char const * func, si
         }        
         logger->buffer[written++] = '\0';
         fprintf(logger->stream, logger->format, logger->buffer);
+        fflush(logger->stream);
         if (logger->stream != stdout && (level == LOG_LEVEL_ERROR || level == LOG_LEVEL_WARN || level == LOG_LEVEL_ERROR)) {
             fprintf(stdout, logger->format, logger->buffer);
         }
         va_end(args);
     }    
+}
+
+unsigned char Logger_level_to_uchar(char const * level, size_t length) {
+    unsigned char level_id = 0;
+    char const * level_name = log_level_names[level_id];
+    while (level_name) {
+        if (!strncmp(level_name, level, length)) {
+            return level_id;
+        }
+        level_name = log_level_names[++level_id];
+    }
+    return LOG_LEVEL_NOT_SET;
+}
+
+void Logger_tear_down(void) {
+    Logger_dest(&base_logger);
 }

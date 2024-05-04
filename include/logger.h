@@ -13,7 +13,7 @@
 #define CATD_(left, right, delim) left##delim##right
 #define CATD(left, right, delim) CATD_(left, right, delim)
 
-#ifdef CAT3
+#ifndef CAT3
     #define CAT3_(X, Y, Z) X##Y##Z
     #define CAT3(X, Y, Z) CAT3_(X, Y, Z)
 #endif
@@ -32,6 +32,8 @@
 #define T_AT_6(_0,_1,_2,_3,_4,_5,_6,...) _6
 #define T_AT_7(_0,_1,_2,_3,_4,_5,_6,_7,...) _7
 #define T_AT_8(_0,_1,_2,_3,_4,_5,_6,_7,_8,...) _8
+#define T_AT_9(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,...) _9
+#define T_AT_10(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,...) _10
 #define T_INSPECT_0(...) T_AT_0(__VA_ARGS__, UNUSED)
 #define T_INSPECT_1(...) T_AT_1(__VA_ARGS__, UNUSED)
 #define T_INSPECT_2(...) T_AT_2(__VA_ARGS__, UNUSED)
@@ -41,6 +43,8 @@
 #define T_INSPECT_6(...) T_AT_6(__VA_ARGS__, UNUSED)
 #define T_INSPECT_7(...) T_AT_7(__VA_ARGS__, UNUSED)
 #define T_INSPECT_8(...) T_AT_8(__VA_ARGS__, UNUSED)
+#define T_INSPECT_9(...) T_AT_9(__VA_ARGS__, UNUSED)
+#define T_INSPECT_10(...) T_AT_10(__VA_ARGS__, UNUSED)
 
 #define LOGGER_REP_0(x) x
 #define LOGGER_REP_1(x) x, x
@@ -49,7 +53,10 @@
 #define LOGGER_REP_4(x) x, x, x, x, x
 #define LOGGER_REP_5(x) x, x, x, x, x, x
 #define LOGGER_REP_6(x) x, x, x, x, x, x, x
-#define LOGGER_REP_7(x) x, x, x, x, x, x, x, X
+#define LOGGER_REP_7(x) x, x, x, x, x, x, x, x
+#define LOGGER_REP_8(x) x, x, x, x, x, x, x, x, x
+#define LOGGER_REP_9(x) x, x, x, x, x, x, x, x, x, x
+#define LOGGER_REP_10(x) x, x, x, x, x, x, x, x, x, x, x
 
 #define LOGGER_LESS_THAN_EQ_0(x) T_INSPECT_1(CAT(LOGGER_REP_, x)(0), LOGGER_REP_0(1))
 #define LOGGER_LESS_THAN_EQ_1(x) T_INSPECT_2(CAT(LOGGER_REP_, x)(0), LOGGER_REP_1(1))
@@ -59,6 +66,19 @@
 #define LOGGER_LESS_THAN_EQ_5(x) T_INSPECT_6(CAT(LOGGER_REP_, x)(0), LOGGER_REP_5(1))
 #define LOGGER_LESS_THAN_EQ_6(x) T_INSPECT_7(CAT(LOGGER_REP_, x)(0), LOGGER_REP_6(1))
 #define LOGGER_LESS_THAN_EQ_7(x) T_INSPECT_8(CAT(LOGGER_REP_, x)(0), LOGGER_REP_7(1))
+#define LOGGER_LESS_THAN_EQ_8(x) T_INSPECT_9(CAT(LOGGER_REP_, x)(0), LOGGER_REP_8(1))
+#define LOGGER_LESS_THAN_EQ_9(x) T_INSPECT_10(CAT(LOGGER_REP_, x)(0), LOGGER_REP_9(1))
+
+#define LOGGER_LOWER_0(x) T_INSPECT_1(CAT(LOGGER_REP_, x)(0), LOGGER_REP_0(x))
+#define LOGGER_LOWER_1(x) T_INSPECT_2(CAT(LOGGER_REP_, x)(1), LOGGER_REP_1(x))
+#define LOGGER_LOWER_2(x) T_INSPECT_3(CAT(LOGGER_REP_, x)(2), LOGGER_REP_2(x))
+#define LOGGER_LOWER_3(x) T_INSPECT_4(CAT(LOGGER_REP_, x)(3), LOGGER_REP_3(x))
+#define LOGGER_LOWER_4(x) T_INSPECT_5(CAT(LOGGER_REP_, x)(4), LOGGER_REP_4(x))
+#define LOGGER_LOWER_5(x) T_INSPECT_6(CAT(LOGGER_REP_, x)(5), LOGGER_REP_5(x))
+#define LOGGER_LOWER_6(x) T_INSPECT_7(CAT(LOGGER_REP_, x)(6), LOGGER_REP_6(x))
+#define LOGGER_LOWER_7(x) T_INSPECT_8(CAT(LOGGER_REP_, x)(7), LOGGER_REP_7(x))
+#define LOGGER_LOWER_8(x) T_INSPECT_9(CAT(LOGGER_REP_, x)(8), LOGGER_REP_8(x))
+#define LOGGER_LOWER_9(x) T_INSPECT_10(CAT(LOGGER_REP_, x)(9), LOGGER_REP_9(x))
 
 // disable at the logger level
 #define LOG_LEVEL_DISABLE 0
@@ -81,7 +101,7 @@
 #define LOG_LEVEL_NOT_SET 7
 
 #ifndef DEFAULT_LOGGING_LEVEL
-    #define DEFAULT_LOGGING_LEVEL LOG_LEVEL_WARN
+    #define DEFAULT_LOGGING_LEVEL CAT(LOGGER_LOWER_, LOG_LEVEL_WARN)(MAX_LOGGING_LEVEL)
 #endif 
 
 // The MAX_LOGGING_LEVEL and DISABLE_LOGGING modify this
@@ -134,7 +154,7 @@ struct Logger {
 #define DEFAULT_LOGGER_BUFFER_SIZE 1024
 
 #define DEFAULT_LOGGER_INIT { \
-    .max_logging_level = MAX_LOGGING_LEVEL, \
+    .max_logging_level = DEFAULT_LOGGING_LEVEL, \
     .stream = NULL, \
     .format = "%s", /* this is a default format which just accepts the char * buffer modified after call to .log */ \
     .buffer = NULL, \
@@ -156,6 +176,10 @@ int Logger_init(struct Logger * logger, char const * filename, char const * form
 void Logger_dest(struct Logger * logger);
 
 void Logger_log(struct Logger * logger, char const * file, char const * func, size_t line, int level, size_t n, ...);
+
+unsigned char Logger_level_to_uchar(char const * level, size_t length);
+
+void Logger_tear_down(void); // clean up the module
 
 /*
 LOG_EVENT(&base_logger, LOG_LEVEL_DISABLE, "test");
