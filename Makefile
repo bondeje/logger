@@ -33,4 +33,4 @@ test_base.exe: src/logger.o
 clean:
 	del /f /q bin\*.exe
 	del /f /q bin\*.log
-	del /f /q src\*.o
+	del /f /q obj\*.o
