@@ -23,6 +23,7 @@
     #define VARIADIC_SIZE_(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, size, ...) size
 #endif
 
+/* begin horrifying macro magic that allows one to compare logging levels so that MAX_LOGGING_LEVEL and DISABLE_LOGGING remove logs */
 #define T_AT_0(_0, ...) _0
 #define T_AT_1(_0,_1,...) _1
 #define T_AT_2(_0,_1,_2,...) _2
@@ -58,6 +59,7 @@
 #define LOGGER_REP_9(x) x, x, x, x, x, x, x, x, x, x
 #define LOGGER_REP_10(x) x, x, x, x, x, x, x, x, x, x, x
 
+/* the magic: if x <= the last number in the macro name, the result of the macro is 1 else 0 */
 #define LOGGER_LESS_THAN_EQ_0(x) T_INSPECT_1(CAT(LOGGER_REP_, x)(0), LOGGER_REP_0(1))
 #define LOGGER_LESS_THAN_EQ_1(x) T_INSPECT_2(CAT(LOGGER_REP_, x)(0), LOGGER_REP_1(1))
 #define LOGGER_LESS_THAN_EQ_2(x) T_INSPECT_3(CAT(LOGGER_REP_, x)(0), LOGGER_REP_2(1))
@@ -69,6 +71,7 @@
 #define LOGGER_LESS_THAN_EQ_8(x) T_INSPECT_9(CAT(LOGGER_REP_, x)(0), LOGGER_REP_8(1))
 #define LOGGER_LESS_THAN_EQ_9(x) T_INSPECT_10(CAT(LOGGER_REP_, x)(0), LOGGER_REP_9(1))
 
+/* the magic: returns the lower of the last number in the macro name and x */
 #define LOGGER_LOWER_0(x) T_INSPECT_1(CAT(LOGGER_REP_, x)(0), LOGGER_REP_0(x))
 #define LOGGER_LOWER_1(x) T_INSPECT_2(CAT(LOGGER_REP_, x)(1), LOGGER_REP_1(x))
 #define LOGGER_LOWER_2(x) T_INSPECT_3(CAT(LOGGER_REP_, x)(2), LOGGER_REP_2(x))
