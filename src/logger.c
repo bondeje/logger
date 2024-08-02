@@ -77,7 +77,7 @@ int Logger_init(struct Logger * logger, char const * filename, char const * form
             }
             file_size = ftell(file) - file_size;
             logger->stream = freopen(filename, "ab+", file);
-            fprintf(logger->stream, "\nlogging started for %s at {need to add date time}\n", logger->name);
+            fprintf(logger->stream, "logging started for %s at {need to add date time}\n", logger->name);
         } else {
             logger->stream = fopen(filename, "wb");
             fprintf(logger->stream, "logging started for %s at {need to add date time}\n", logger->name);
@@ -139,8 +139,8 @@ void Logger_log(struct Logger * logger, char const * file, char const * func, si
         logger->buffer[written++] = '\0';
         fprintf(logger->stream, logger->format, logger->buffer);
         fflush(logger->stream);
-        if (logger->stream != stdout && (level == LOG_LEVEL_ERROR || level == LOG_LEVEL_WARN || level == LOG_LEVEL_ERROR)) {
-            fprintf(stdout, logger->format, logger->buffer);
+        if (logger->stream != stderr && level && level <= LOG_LEVEL_ERROR) {
+            fprintf(stderr, logger->format, logger->buffer);
         }
         va_end(args);
     }    

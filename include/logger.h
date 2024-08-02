@@ -123,7 +123,7 @@
     #define APP_LOGGER NULL
 #else 
     #ifndef MAX_LOGGING_LEVEL
-        #define MAX_LOGGING_LEVEL LOG_LEVEL_TRACE
+        #define MAX_LOGGING_LEVEL LOG_LEVEL_INFO
     #endif
     // main logging macro. Should never be called directly
     #define LOG_EVENT_0(pLogger, level, ...) do {} while (0)

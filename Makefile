@@ -1,36 +1,49 @@
+.POSIX:
+# to prevent funny business with FreeBSD's make
+.OBJDIR: .
+.SUFFIXES:
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable -fPIC
+CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable -fPIC -std=c99
+BLDCFLAGS = $(CFLAGS) -O2 -DNDEBUG
+DBGCFLAGS = $(CFLAGS) -g3 -fsanitize=address,undefined -O0
 IFLAGS = -Iinclude
+DBGLFLAGS =
 LFLAGS = 
-BIN_DIR = bin
-OBJ_DIR = obj
 
-all: build_hierarchy src/logger.o
+LIB_OBJS = src/logger.o
+DBG_LIB_OBJS = src/logger.do
 
-test: test_base.exe
+all: build_paths $(LIB_OBJS) $(DBG_LIB_OBJS) test
 
-build_hierarchy: $(OBJ_DIR) $(BIN_DIR)
+build_paths:
+	@mkdir -p bin
 
-$(OBJ_DIR): ; @mkdir -p $@
+test: $(DBG_LIB_OBJS) bin/test_base bin/test_base_maxwarn bin/test_base_disabled
+	@echo "from test_base" > bin/test_base.log
+	bin/test_base
+	@echo " "
+	@echo "from test_base_maxwarn" >> bin/test_base.log
+	bin/test_base_maxwarn
+	@echo " "
+	@echo "from bin/test_base_disabled.exe" >> bin/test_base.log
+	bin/test_base_disabled
 
-$(BIN_DIR): ; @mkdir -p $@
+bin/test_base: $(DBG_LIB_OBJS) test/test_base.c
+	$(CC) $(DBGCFLAGS) -DMAX_LOGGING_LEVEL=LOG_LEVEL_TRACE $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base
 
-src/logger.o: src/logger.c
-	$(CC) $(CFLAGS) -c $(IFLAGS) src/logger.c -o obj/logger.o $(LFLAGS)
+bin/test_base_maxwarn: $(DBG_LIB_OBJS) test/test_base.c
+	$(CC) $(DBGCFLAGS) -DMAX_LOGGING_LEVEL=LOG_LEVEL_WARN $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base_maxwarn
 
-test_base.exe: src/logger.o
-	del /f bin\test_base.log
-	$(CC) $(CFLAGS) $(IFLAGS) test/test_base.c obj/logger.o -o bin/test_base.exe $(LFLAGS)
-	$(CC) $(CFLAGS) -DMAX_LOGGING_LEVEL=LOG_LEVEL_WARN $(IFLAGS) test/test_base.c obj/logger.o -o bin/test_base_maxwarn.exe $(LFLAGS)
-	$(CC) $(CFLAGS) -DDISABLE_LOGGING $(IFLAGS) test/test_base.c obj/logger.o -o bin/test_base_disabled.exe $(LFLAGS)
-	echo "from bin/test_base.exe" >> bin/test_base.log
-	bin/test_base.exe
-	echo "from bin/test_base_maxwarn.exe" >> bin/test_base.log
-	bin/test_base_maxwarn.exe
-	echo "from bin/test_base_disabled.exe" >> bin/test_base.log
-	bin/test_base_disabled.exe
-
+bin/test_base_disabled: $(DBG_LIB_OBJS) test/test_base.c
+	$(CC) $(DBGCFLAGS) -DDISABLE_LOGGING $(IFLAGS) test/test_base.c  $(DBG_LIB_OBJS) -o bin/test_base_disabled
+	
 clean:
-	del /f /q bin\*.exe
-	del /f /q bin\*.log
-	del /f /q obj\*.o
+	@rm -f test_base test_base_maxwarn test_base_disabled src/*.o src/*.do
+	@rm -rf bin
+
+.SUFFIXES: .c .o .do
+.c.o:
+	$(CC) $(BLDCFLAGS) -c $(IFLAGS) $< -o $@
+
+.c.do:
+	$(CC) $(DBGCFLAGS) -c $(IFLAGS) $< -o $@
