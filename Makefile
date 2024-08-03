@@ -3,7 +3,7 @@
 .OBJDIR: .
 .SUFFIXES:
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable -fPIC -std=c99 -Wno-newline-eof
+CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable -fPIC -std=c99
 BLDCFLAGS = $(CFLAGS) -O2 -DNDEBUG
 #DBGCFLAGS = $(CFLAGS) -g3 -O0 -fsanitize=address,undefined
 DBGCFLAGS = $(CFLAGS) -g3 -O0 `if [ -n "$(SANITIZE)" ] ; then echo "-fsanitize=address,undefined"; fi`
@@ -15,6 +15,8 @@ LIB_OBJS = src/logger.o
 DBG_LIB_OBJS = src/logger.do
 
 all: build_paths $(LIB_OBJS) $(DBG_LIB_OBJS) test
+
+.MAIN: all
 	
 
 build_paths:
