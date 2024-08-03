@@ -161,3 +161,4 @@ unsigned char Logger_level_to_uchar(char const * level, size_t length) {
 void Logger_tear_down(void) {
     Logger_dest(&base_logger);
 }
+
