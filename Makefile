@@ -6,7 +6,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -Wno-unused-parameter -Wno-unused-but-set-variable -fPIC -std=c99
 BLDCFLAGS = $(CFLAGS) -O2 -DNDEBUG
 #DBGCFLAGS = $(CFLAGS) -g3 -O0 -fsanitize=address,undefined
-DBGCFLAGS = $(CFLAGS) -g3 -O0 `if [ -n "$(SANITIZE)" ] ; then echo "-fsanitize=address,undefined"; fi`
+DBGCFLAGS = $(CFLAGS) -g3 -O0
 IFLAGS = -Iinclude
 DBGLFLAGS =
 LFLAGS = 
@@ -33,13 +33,16 @@ test: $(DBG_LIB_OBJS) bin/test_base bin/test_base_maxwarn bin/test_base_disabled
 	bin/test_base_disabled
 
 bin/test_base: $(DBG_LIB_OBJS) test/test_base.c
-	$(CC) $(DBGCFLAGS) -DMAX_LOGGING_LEVEL=LOG_LEVEL_TRACE $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base
+	if [ -n "$(SANITIZE)" ] ; then export DBGOPT="-fsanitize=address,undefined"; else export DBGOPT="" ; fi ; \
+	$(CC) $(DBGCFLAGS) $$DBGOPT -DMAX_LOGGING_LEVEL=LOG_LEVEL_TRACE $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base
 
 bin/test_base_maxwarn: $(DBG_LIB_OBJS) test/test_base.c
-	$(CC) $(DBGCFLAGS) -DMAX_LOGGING_LEVEL=LOG_LEVEL_WARN $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base_maxwarn
+	if [ -n "$(SANITIZE)" ] ; then export DBGOPT="-fsanitize=address,undefined"; else export DBGOPT="" ; fi ; \
+	$(CC) $(DBGCFLAGS) $$DBGOPT -DMAX_LOGGING_LEVEL=LOG_LEVEL_WARN $(IFLAGS) test/test_base.c $(DBG_LIB_OBJS) -o bin/test_base_maxwarn
 
 bin/test_base_disabled: $(DBG_LIB_OBJS) test/test_base.c
-	$(CC) $(DBGCFLAGS) -DDISABLE_LOGGING $(IFLAGS) test/test_base.c  $(DBG_LIB_OBJS) -o bin/test_base_disabled
+	if [ -n "$(SANITIZE)" ] ; then export DBGOPT="-fsanitize=address,undefined"; else export DBGOPT="" ; fi ; \
+	$(CC) $(DBGCFLAGS) $$DBGOPT -DDISABLE_LOGGING $(IFLAGS) test/test_base.c  $(DBG_LIB_OBJS) -o bin/test_base_disabled
 	
 clean:
 	@rm -f test_base test_base_maxwarn test_base_disabled src/*.o src/*.do
